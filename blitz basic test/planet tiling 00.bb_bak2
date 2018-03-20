@@ -1,0 +1,662 @@
+Include "function library.bb"
+	
+	;----> horizon computation
+		; use hovering to get the adjacent face to enumerate
+		; use the radius and the distance to hovering to get the horizon
+		; enumarate face and their tile and store good tile (or simply delete bad tile) into tilelist (create new tilelist for each)
+	
+		;end of loop with best cell from cube RECURSION
+		;tesselate quad from cube
+		;evaluate quad to sphere
+		;find best match
+		
+		;get the distance between the center of the tile and the ship
+.setup
+
+Graphics3D 800,600,16,2
+SetBuffer BackBuffer()
+
+;-------------------------------------------
+cam = CreateCamera ()
+PositionEntity cam, 0,0,-5
+
+
+l1 = CreateLight (1)
+RotateEntity l1, 45,45,0
+
+tex=LoadTexture( "testure.jpg" )
+
+
+plane = CreatePlane ()
+PositionEntity plane, 0,-8,0
+EntityColor plane, 64,32,16
+EntityTexture plane,tex
+
+center = CreateSphere (32)
+PositionEntity center, 0,-0,0
+ScaleEntity center, .5,.5,.5
+EntityColor center, 255,0,0
+HideEntity center
+
+h = CreateSphere (8)
+PositionEntity h, 0,-0,0
+ScaleEntity h, .1,.1,.1
+EntityColor h, 0,255,0
+HideEntity h
+
+cursor = CreateSphere (8)
+PositionEntity cursor, 0,0,-2
+ScaleEntity cursor , .1,.1,.1
+EntityColor cursor , 0,255,0
+;HideEntity cursor 
+
+;-------------------------------------------
+
+;put set up code here
+
+.loop
+
+switch = 1
+
+hoveredface$ = " "
+
+	div = 5
+	div2 = div*div
+
+	
+	di = div +1
+	Dim g(  di*di )
+	For i = 0 To ( di*di )-1
+		g(i) = CreateSphere (2)
+		;FreeEntity g(i)
+		HideEntity g(i)
+	Next
+
+
+;WireFrame True
+
+
+
+
+
+While Not KeyDown(1)
+	
+		;detect side
+		;enumerate cell division
+			;find corner
+			;compute centroid
+			;project to sphere
+			;detect rightcell
+			;store cell within radius
+			;find current cell
+				;if not max depth -> enumerate cell division
+	
+	;-------------------------------------------
+	
+	planet.point3d = New point3d
+	planet\x = 0
+	planet\y = 0
+	planet\z = 0
+		
+	entitypoint.point3d = New point3d
+	
+	If KeyHit (57)
+					Color 255,255,0
+
+		If switch = 0 Then
+			switch = 1
+		;If switch = 1 Then	switch = 0
+		Else
+			switch = 0
+		EndIf
+		
+	EndIf
+	
+	If switch = 0 Then
+		entitypoint\x = EntityX (cam)
+		entitypoint\y = EntityY (cam)
+		entitypoint\z = EntityZ (cam)
+		controlentity(cam)
+		PointEntity cam, center
+	Else
+		entitypoint\x = EntityX (cursor )
+		entitypoint\y = EntityY (cursor )
+		entitypoint\z = EntityZ (cursor )
+		controlentity(cursor )
+		PointEntity cursor , center
+	EndIf 
+	
+	c0.point3d = New point3d
+	c0\x = entitypoint\x
+	c0\y = entitypoint\y
+	c0\z = entitypoint\z
+
+	
+	c0= normalizepoint3d(c0);
+	PositionEntity h, c0\x,c0\y,c0\z
+	
+	
+	hoveredface = cubeface(entitypoint\x, entitypoint\y, entitypoint\z )
+	axis = facetoaxis(hoveredface )
+
+	If poscell = 0 Then poscell = createquadface()
+	
+	detectplanettile(entitypoint,planet, poscell,axis, planet, div,1)
+	
+	
+
+	;-------------------------------------------
+	
+	;refresh
+	UpdateWorld 1
+	RenderWorld 1
+
+	; put 2d drawing code here
+	showjoystate(100); 2d text display of joystick state
+	Text 10,10, l;TrisRendered ();cubeface(EntityX (cam), EntityY (cam), EntityZ (cam) )
+
+	VWait:Flip False
+	
+	deletedata()
+	
+Wend
+
+;put exit clean up code here
+
+ClearWorld
+
+;------------------------------------------------------
+
+.func
+
+
+Function detectplanettile(entitypoint.point3d, planet.point3d, poscell, axis, offsetPoint.point3d, division#=10,size#=.5, depth=1)
+	
+	If depth < 0 Then Return
+	
+	division = division +1
+	d2# = division*division
+	
+	;--------------------------------------------------------------
+	;initializing point, surface point to check tile distance
+	n.point3d = New point3d
+	n\x = entitypoint\x
+	n\y = entitypoint\y
+	n\z = entitypoint\z
+	n = normalizepoint3d(n)
+		
+	tile.quadpair	= Null		; New tile
+	rightcell.quadpair = Null	; rightcell.point3d = Null	;to store the closest tile 	
+		
+	horizon# = horizontest(planet,entitypoint, 1)
+	
+	;offsetPoint = New point3d
+	;offsetPoint\x = 0
+	;offsetPoint\y = 0
+	;offsetPoint\z = 0
+	
+HideEntity poscell
+	
+	;surface = GetSurface (poscell,1) 
+	close# = Abs( 2^30 )		
+		
+	;for each face relative to current face hovered
+	;--------------------------------------------------------------
+	For i=0 To d2-1
+	
+		
+	tile = CreateTile(i, division, axis, size, offsetpoint)
+		
+		If tile = Null Then Goto jump
+		;debugenum(tile,i);Delete tile		
+			
+			; select right cell base on distance
+			; if cell = null, this cell = right, check distance to normalize ship, if distance to centroid less, then cell is new cell
+			
+			If rightcell = Null Then 
+			
+				rightcell = tile
+				close = magnitude3d(n\x - tile\sphere\centroid\x, n\y - tile\sphere\centroid\y, n\z - tile\sphere\centroid\z)
+;DebugLog depth + " : " + i + " : " + close
+				;debugquad(poscell, tile\sphere\p1, tile\sphere\p2, tile\sphere\p3, tile\sphere\p4)
+				
+			Else 
+				
+				m# =  magnitude3d(n\x - tile\sphere\centroid\x, n\y - tile\sphere\centroid\y, n\z - tile\sphere\centroid\z)
+				
+				If m < close Then
+				
+					rightcell = tile
+					close# = m
+					
+					;debugquad(poscell, tile\sphere\p1, tile\sphere\p2, tile\sphere\p3, tile\sphere\p4)
+					
+				EndIf
+			EndIf	
+			
+			;Delete tile over the horizon
+			horizonlimit# = magnitude3d(planet\x - tile\sphere\centroid\x, planet\y - tile\sphere\centroid\y, planet\z - tile\sphere\centroid\z)
+			If horizonlimit > horizon Then If tile <> Null Then deletetile(tile) ;Delete tile
+			
+				WireFrame True: RenderWorld
+
+		.jump
+	Next
+
+	;face hovered, found and tesselate base on distance = rightcell
+	RenderWorld
+	DebugLog "---------------------------------------"
+If rightcell = Null Then Stop
+	;need a start offset!
+	detectplanettile(entitypoint.point3d, planet.point3d, poscell, axis, rightcell\flat\centroid, 4, tilesize(rightcell), depth-1)
+
+	
+	If rightcell <> Null deletetile(rightcell);Delete rightcell
+	
+
+	
+	
+End Function
+
+;------------------------------------------------------
+
+Function drawquadmesh()
+	
+	For this.quadpair = Each quadpair		
+		cell.mesh = New mesh
+		cell\ref = quadface(this) ;: RenderWorld:Flip: Delay 200
+		;draw all of them in red expect the subdivided
+
+	Next
+	
+End Function
+
+Function pointtile.point3d(i, offset#, division, s#, axis=0)
+
+
+					;modified for unit sphere"##########################"
+		a# = offset + ( i Mod division )*s
+		b# = offset + ( i  /  division )*s
+		
+		Select axis
+			;__________________________________________
+			Case 0;xz floor (top)
+			x# = a
+			z# = b
+			y# = .5;s
+			;__________________________________________
+			Case 1;xy forward wall (front)
+			x# = a
+			y# = b
+			z# = .5;s
+			;__________________________________________
+			Case 2;zy side1 wall 
+			z# = a
+			y# = b
+			x# = .5;s
+			;__________________________________________
+			Case 3;xz floor (bottom)
+			x# = a
+			z# = b
+			y# = -.5;s
+			;__________________________________________
+			Case 4;xy forward wall (back)
+			x# = a
+			y# = b
+			z# = -.5;s
+			;__________________________________________
+			Case 5;zy side2 wall 
+			z# = a
+			y# = b
+			x# = -.5;s
+			;__________________________________________
+
+		End Select
+			
+		p.point3d = New point3d
+		p\x = x; + x1
+		p\y = y; + y1
+		p\z = z; + z1
+		
+		Return p
+
+End Function
+
+
+
+Function debugquad(mesh, p1.point3d, p2.point3d, p3.point3d, p4.point3d)
+	surface = GetSurface (mesh, 1)
+	o# = 1.1
+	VertexCoords surface, 0, p1\x*o, p1\y*o, p1\z*o
+	VertexCoords surface, 1, p2\x*o, p2\y*o, p2\z*o
+	VertexCoords surface, 2, p3\x*o, p3\y*o, p3\z*o
+	VertexCoords surface, 3, p4\x*o, p4\y*o, p4\z*o
+	UpdateNormals mesh
+	;EntityOrder mesh, -1
+
+End Function
+
+Function catspherepoint.point3d(point.point3d, radius# = 1)
+	
+	p.point3d = New point3d
+	p\x = point\x *2
+	p\y = point\y *2
+	p\z = point\z *2
+	;method with no deformation around the pole
+
+	x# = p\x 
+	y# = p\y 
+	z# = p\z 
+	
+	
+	x2# = x*x
+	y2# = y*y
+	z2# = z*z
+	
+	a# = (x2 / 2.0)
+	b# = (y2 / 2.0)
+	c# = (z2 / 2.0)
+	
+	sx# =  Sqr(1.0 - b - c + ( (y2 * z2) / 3.0 ) ) * x /2
+	sy# =  Sqr(1.0 - c - a + ( (x2 * z2) / 3.0 ) ) * y /2
+	sz# =  Sqr(1.0 - a - b + ( (x2 * y2) / 3.0 ) ) * z /2
+	
+	sx# = sx*radius
+	sy# = sy*radius
+	sz# = sz*radius
+	
+	p\x = sx
+	p\y = sy
+	p\z = sz
+	
+	
+	Return p
+
+End Function
+
+Function Horizontest#(planet.point3d,  point.point3d, radius#)
+
+	; only once per frame because planet and ship don't update
+	distance# = magnitude3d(point\x-planet\x, point\y-planet\y, point\z-planet\z)
+	
+	;radius by which we check if tile are visible by their center
+	horizonsize# = Sqr ( (distance*distance) - (radius*radius) )
+
+	Return horizonsize
+	
+End Function
+
+Function cubeface$(x,y,z)
+	
+	ax = Abs(x)
+	ay = Abs(y)
+	az = Abs(z)
+	
+	If ax > ay And ax > az Then
+	
+		If x > 0 Then 
+			Return "side1";
+		Else
+			Return "side2"
+		EndIf
+		
+	Else If ay > az Then
+	
+		If y > 0 Then 
+			Return "top";
+		Else
+			Return "bottom"
+		EndIf
+		
+	Else
+	
+		If z > 0 Then 
+			Return "back";
+		Else
+			Return "front"
+		EndIf
+		
+	EndIf
+	
+	;side1  : N>top  E>back  W>front S>bottom /side2
+	;side2  : N>top  E>front W>back  S>bottom /side1
+	
+	;front  : N>top  E>side1 W>side2 S>bottom /back
+	;back   : N>top  E>side2 W>side1 S>bottom /front
+	
+	;top    : N>back E>side1 W>side2 S>front  /bottom
+	;bottom : N>back E>side1 W>side2 S>front  /top
+		
+End Function
+
+Function createquadface()
+	poscell = CreateMesh ()
+	possurface = CreateSurface(poscell)		
+		
+	v1 = AddVertex (possurface, 0,0,0, 0,0,0)
+	v2 = AddVertex (possurface, 1,0,0, 0,0,0)
+	v3 = AddVertex (possurface, 1,1,0, 0,0,0)
+	v4 = AddVertex (possurface, 0,1,0, 0,0,0)
+		
+	t1 = AddTriangle (possurface, v1,v3,v2)
+	t2 = AddTriangle (possurface, v1,v4,v3)
+	
+	brush = CreateBrush()
+		BrushFX brush, 16
+		PaintSurface possurface, brush
+		
+	UpdateNormals poscell
+	Return poscell
+End Function 	
+
+
+
+Function quadface(quad.quadpair)
+
+	mesh= CreateMesh ()
+	surface = CreateSurface(mesh)		
+		
+	v1 = AddVertex (surface, quad\sphere\p1\x, quad\sphere\p1\y, quad\sphere\p1\z, 0,0,0)
+	v2 = AddVertex (surface, quad\sphere\p2\x, quad\sphere\p2\y, quad\sphere\p2\z, 0,0,0)
+	v3 = AddVertex (surface, quad\sphere\p3\x, quad\sphere\p3\y, quad\sphere\p3\z, 0,0,0)
+	v4 = AddVertex (surface, quad\sphere\p4\x, quad\sphere\p4\y, quad\sphere\p4\z, 0,0,0)
+		
+	t1 = AddTriangle (surface, v1,v3,v2)
+	t2 = AddTriangle (surface, v1,v4,v3)
+	
+	brush = CreateBrush()
+		BrushFX brush, 16
+		BrushColor brush, 255,000,000
+		PaintSurface surface, brush
+		
+	UpdateNormals mesh
+	Return mesh
+	
+End Function 
+
+
+
+Function facetoaxis( hoveredface$ )
+	Select hoveredface
+		Case "side1"	: axis = 2
+		Case "side2"	: axis = 5
+		
+		Case "top" 		: axis = 0
+		Case "bottom"	: axis = 3
+		
+		Case "back"		: axis = 1
+		Case "front"	: axis = 4
+	End Select
+	Return axis
+End Function
+
+
+
+
+Function CreateTile.quadpair(i, division#, axis, size#, offsetpoint.point3d)
+	;generate position, depend on axis xz=0, xy=1, zy=2
+	;evaluatequad from cube from indice tesselation
+	
+	d2# = division*division
+	S# = size/(division-1);step size
+	
+	;center = 0 -> corner, center = 1 -> center offset
+	center = 1 : offset# = 0:	If center = 1 Then offset = - (size) / 2
+	
+	
+	
+	
+	centroid.point3d = New point3d
+
+	w1 = i
+	w2 = i+1
+	w3 = i+division +1
+	w4 = i+division
+		
+	If (i Mod division) = (division -1) Then Goto skip
+	If i => d2 - division Then Goto skip
+
+		
+	p1.point3d = pointtile(w1, offset, division, s, axis)
+	p2.point3d = pointtile(w2, offset, division, s, axis)
+	p3.point3d = pointtile(w3, offset, division, s, axis)
+	p4.point3d = pointtile(w4, offset, division, s, axis)
+		
+	p1 = addpoint3d(p1, offsetpoint)		
+	p2 = addpoint3d(p2, offsetpoint)		
+	p3 = addpoint3d(p3, offsetpoint)		
+	p4 = addpoint3d(p4, offsetpoint)		
+	
+	;If (i Mod division) = (division -1) Then Goto skip
+	;If i => d2 - division Then Goto skip
+		
+		centroid\x = (p1\x + p2\x + p3\x + p4\x)/4
+		centroid\y = (p1\y + p2\y + p3\y + p4\y)/4
+		centroid\z = (p1\z + p2\z + p3\z + p4\z)/4
+		
+		;RenderWorld:Delay 100:Flip; WaitKey()
+	
+	;.skip	
+;quadtosphere
+
+	tile.quadpair	= New quadpair
+	tile\flat		= New quad
+	tile\sphere		= New quad
+
+	;quad
+	tile\flat\p1			= p1
+	tile\sphere\p1			= catspherepoint(p1)
+		
+	tile\flat\p2			= p2
+	tile\sphere\p2			= catspherepoint(p2)
+		
+	tile\flat\p3			= p3
+	tile\sphere\p3			= catspherepoint(p3)
+		
+	tile\flat\p4			= p4
+	tile\sphere\p4			= catspherepoint(p4)
+		
+	tile\flat\centroid		= centroid
+	tile\sphere\centroid	= catspherepoint( centroid )
+
+	;mesh for visualization
+	
+	tile\cell.mesh	= New mesh
+	tile\cell\ref	= quadface(tile)
+	
+	Return tile
+	
+		.skip
+		Return Null
+
+End Function	
+
+Function addpoint3d.point3d(a.point3d, b.point3d)
+	add.point3d = New point3d
+	add\x = a\x + b\x
+	add\y = a\y + b\y
+	add\z = a\z + b\z
+	Return add
+End Function
+
+Function TileSize#(tile.quadpair)
+	dx# = tile\flat\p1\x - tile\flat\p2\x
+	dy# = tile\flat\p1\y - tile\flat\p2\y
+	dz# = tile\flat\p1\z - tile\flat\p2\z
+	
+	size# = max( dx, max(dz,dy) )
+	
+	Return size
+	
+End Function
+
+
+
+
+
+Function debugenum(tile.quadpair, i)
+;;;;;;;;;;;;;
+;debug
+;		PositionEntity g(i), centroidcat\x, centroidcat\y, centroidcat\z
+			PositionEntity g(i), tile\sphere\p1\x, tile\sphere\p1\y, tile\sphere\p1\z
+;			PositionEntity g(i), p2c\x, p2c\y, p2c\z
+;			PositionEntity g(i), p3c\x, p3c\y, p3c\z
+;			PositionEntity g(i), p4c\x, p4c\y, p4c\z
+		ScaleEntity g(i), .05,.05,.05
+		EntityColor g(i), 0,0,255
+;;;;;;;;;;;;;
+End Function	
+
+Function deletedata()
+		
+		Delete Each point3d
+		Delete Each quadpair
+		Delete Each quadlist 
+		Delete Each quad
+		l = 0
+		For m.mesh = Each mesh
+			l=l+1
+			FreeEntity m\ref
+			Delete m
+		Next
+		;Delete Each mesh
+
+End Function
+
+Function DeleteTile(tile.quadpair)
+	FreeEntity tile\cell\ref
+	
+	Delete tile\flat
+	Delete tile\sphere
+	Delete tile\cell
+	
+	Delete tile
+	
+End Function
+
+
+
+
+Type quad
+	Field p1.point3d
+	Field p2.point3d
+	Field p3.point3d
+	Field p4.point3d
+	
+	Field centroid.point3d	
+End Type
+
+Type mesh
+	Field ref
+End Type
+
+
+Type quadpair
+	Field flat.quad
+	Field sphere.quad
+	Field cell.mesh
+End Type
+
+Type quadlist
+	Field element.quadpair
+End Type

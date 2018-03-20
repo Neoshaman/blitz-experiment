@@ -1,0 +1,152 @@
+Graphics 800,600,0,2
+Origin 400,300
+SetBuffer BackBuffer ()
+HidePointer 
+
+;color
+For i = 0 To 255
+	For j = 0 To 255
+			
+		Color i,j,0
+		Plot i,j 
+
+	Next
+Next
+
+colormap = CreateImage( 255,255)
+GrabImage colormap, 0,0
+
+
+Cls
+Const gridSize = 20
+For i = 0 To GraphicsWidth()/gridSize ; Step gridsize
+	For j = 0 To GraphicsHeight()/gridSize ; Step gridsize
+			
+		
+		gx = i*gridsize
+		gy = j*gridsize
+		
+		Color 1*i,1*j,0
+		Rect gx,gy ,gridsize, gridsize, 0
+		
+		width = (i*10000) + (j*100):SeedRnd (1 + (i*width) + (j*width*width) )
+
+		
+
+	Next;j loop
+Next ;i loop
+
+
+DrawMap = CreateImage( GraphicsWidth(), GraphicsHeight() ); could declare early and set imagebuffer before reseting the double buffer
+gridmap = CreateImage( GraphicsWidth(), GraphicsHeight() ); could declare early and set imagebuffer before reseting the double buffer
+GrabImage gridmap , 0,0
+
+colortoggle = 0
+vectormax = 0
+omx = MouseX()
+omy = MouseY()
+vectorx = 128
+vectory = 128
+pensize = 30
+Const peninterval# = .1 ; 0-1 range
+
+While Not KeyDown(1)
+	
+	Cls
+	DrawImage gridmap , 0,0
+	DrawImage DrawMap , 0,0
+	
+	mx = MouseX()
+	my = MouseY()
+	
+	
+	
+	If MouseDown(1) Then
+		SetBuffer ImageBuffer( DrawMap )
+
+		vectorscale = 3
+
+		vectorx = 128 + (omx - mx) * vectorscale 
+		vectory = 128 + (omy - my) * vectorscale 
+
+		
+		
+		If vectorx > vectormax Then vectormax = vectorx
+		
+		If vectorx > 255 Then vectorx = 255
+		If vectorx < 0 Then vectorx = 0
+		If vectory > 255 Then vectory = 255
+		If vectory < 0 Then vectory = 0
+		
+		Color 0,0,0
+		Rect 0,0,40,15		
+
+		
+		Color vectorx,vectory, 0
+		
+		For t#=0 To 1  Step peninterval
+			Oval lerp(omx,mx,t)-pensize/2, lerp(omy,my,t)-pensize/2,pensize,pensize,1
+		Next
+
+		
+		Line omx, omy, mx, my
+		
+
+		
+		SetBuffer BackBuffer()
+	EndIf
+	
+	
+		
+
+	
+	If MouseDown(2) Then
+		SetBuffer ImageBuffer( DrawMap )
+		Cls
+		SetBuffer BackBuffer()
+	EndIf
+	
+	
+	
+	
+	If KeyHit(16) Then
+	
+		Select colortoggle
+			Case 0 :colortoggle = 1
+			Case 1 :colortoggle = 0
+		End Select
+
+	EndIf
+	
+	If colortoggle = 1 Then
+		DrawImage colormap , 0,0
+		Color 255,255,255
+		Oval vectorx-2, vectory-2, 4,4,0
+	EndIf
+	
+	
+	Color 255,255,255
+	Oval mx-(pensize/2), my-(pensize/2), pensize, pensize,0
+	Plot mx, my
+	
+	Color 255,255,255
+	Text 0,0, vectorx 
+
+	
+	
+	VWait:Flip False
+
+
+	omx = mx
+	omy = my
+		
+Wend
+FreeImage gridmap 
+FreeImage colormap 
+FreeImage DrawMap 
+ClearWorld 
+
+
+Function lerp (a,b,t#=0.5)
+	Return (1-t)*a + b*t
+End Function

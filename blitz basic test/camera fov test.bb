@@ -1,0 +1,74 @@
+Graphics3D 800,600,0,2
+SetBuffer BackBuffer()
+
+WireFrame True
+
+;-------------------------------------------
+cam = CreateCamera ()
+PositionEntity cam, 0,0,0
+CameraZoom cam, 1
+
+FoV = 90
+SetCameraFov(cam, FoV)
+
+l1 = CreateLight (1)
+RotateEntity l1, 45,45,0
+
+
+
+
+For j= -100 To 100 Step 10
+	For i= -100 To 100 Step 10
+	
+		center = CreateSphere (3)
+		PositionEntity center, i,0,j
+		ScaleEntity center, 5,5,5
+		EntityColor center, 255,0,0
+		If EntityInView (center,cam) Then EntityColor center, 0,255,0
+
+	Next
+Next
+
+PositionEntity cam, 0,100,-250
+CameraZoom cam, 1
+
+cube = CreateCube(cam)
+FlipMesh cube
+FitMesh cube,0,0,0, 1,1,1
+PositionEntity cube,0,0,3
+
+
+;-------------------------------------------
+distance# = 5
+
+While Not KeyDown(1)
+
+PositionEntity cube,0,0,distance
+
+If KeyHit (200) Then distance = distance+1
+If KeyHit (208) Then distance = distance-1
+
+
+	;refresh
+	UpdateWorld 1
+	RenderWorld 1
+pc = pixelcoverage(1,distance,FoV)
+Text 0,0, pc
+
+Line 0,GraphicsHeight()/2,  GraphicsWidth(), GraphicsHeight()/2
+Line 0,-pc+GraphicsHeight()/2,  GraphicsWidth(), -pc+GraphicsHeight()/2
+
+	VWait:Flip False
+
+Wend
+ClearWorld 
+
+
+Function SetCameraFov(camera, FoV#)
+	CameraZoom camera, 1.0/Tan(FoV/2.0)
+End Function
+
+
+Function pixelCoverage(height#, distance#, fov#)
+	Return (height/distance)/2.0 * Tan(fov/2.0)*GraphicsHeight()
+End Function

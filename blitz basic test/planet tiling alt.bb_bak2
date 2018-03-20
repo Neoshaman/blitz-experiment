@@ -1,0 +1,88 @@
+Include "base Setup.bb"
+
+
+
+
+While Not KeyDown(1)
+	
+		;detect side
+		;enumerate cell division
+			;find corner
+			;compute centroid
+			;project to sphere
+			;detect rightcell
+			;store cell within radius
+			;find current cell
+				;if not max depth -> enumerate cell division
+	
+	;-------------------------------------------
+	
+	planet.point3d = New point3d
+	planet\x = 0
+	planet\y = 0
+	planet\z = 0
+		
+	entitypoint.point3d = New point3d
+	
+	If KeyHit (57)
+					Color 255,255,0
+
+		If switch = 0 Then
+			switch = 1
+		;If switch = 1 Then	switch = 0
+		Else
+			switch = 0
+		EndIf
+		
+	EndIf
+	
+	If switch = 0 Then
+		entitypoint\x = EntityX (cam)
+		entitypoint\y = EntityY (cam)
+		entitypoint\z = EntityZ (cam)
+		controlentity(cam)
+		PointEntity cam, center
+	Else
+		entitypoint\x = EntityX (cursor )
+		entitypoint\y = EntityY (cursor )
+		entitypoint\z = EntityZ (cursor )
+		controlentity(cursor )
+		PointEntity cursor , center
+	EndIf 
+	
+	c0.point3d = New point3d
+	c0\x = entitypoint\x
+	c0\y = entitypoint\y
+	c0\z = entitypoint\z
+
+	
+	c0= normalizepoint3d(c0);
+	PositionEntity h, c0\x,c0\y,c0\z
+	
+	
+	hoveredface = cubeface(entitypoint\x, entitypoint\y, entitypoint\z )
+	axis = facetoaxis(hoveredface )
+
+	If poscell = 0 Then poscell = createquadface()
+	
+	detectplanettile(entitypoint,planet, poscell,axis, div,1)
+	
+	
+
+	;-------------------------------------------
+	;refresh
+	UpdateWorld 1
+	RenderWorld 1
+	;-------------------------------------------
+	
+	
+	
+	;-------------------------------------------
+	VWait:Flip False
+	
+	
+Wend
+
+;put exit clean up code here
+
+ClearWorld

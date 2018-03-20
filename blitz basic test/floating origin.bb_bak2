@@ -1,0 +1,128 @@
+Graphics 800,600,0,2
+Origin 400,300
+SetBuffer BackBuffer ()
+
+;fine base coordinate
+x = 100
+y = 100
+
+;floating hash
+Const hx = 20
+Const hy = 20
+
+;display coordinate
+rx = 0
+ry = 0
+
+While Not KeyHit(1)
+	Cls
+;grid
+	Origin 0,0
+	Color 20,20,20
+	
+	For i = 0 To 800 Step hx
+		Line i,0,i,600
+	Next
+
+	For i = 0 To 600 Step hy
+		Line 0,i,800,i
+	Next
+	
+
+	Color 40,40,40
+	
+	For i = 0 To 800 Step 10 * hx
+		Line i,0,i,600
+	Next
+
+	For i = 0 To 600 Step 10 * hy
+		Line 0,i,800,i
+	Next
+	
+	Color 255,0,0 : Line 400,0,400,600
+	Color 0,0,255 : Line 0,300,800,300
+	
+	Origin 400,300
+	Color 255,255,255
+
+
+;control
+	If KeyDown(205) Then
+	x = x+1
+	EndIf
+	
+	If KeyDown(203) Then
+	x = x-1
+	EndIf
+	
+
+	If KeyDown(208) Then
+	y = y+1
+	EndIf
+	
+
+	If KeyDown(200) Then
+	y = y-1
+	EndIf
+
+;player
+	;hashed player coordinate
+	rx = (x/hx)
+	ry = (y/hy)
+	
+	;floating player coordinate
+	px = x Mod hx
+	py = y Mod hx
+
+	;display player
+	Plot px,py
+	Rect px -2, py -2 , 5,5,0
+	
+	;visualization
+	Origin 0,0
+	Text 20,20, rx*hx + "_" + ry*hy
+	Origin 400,300
+	
+	
+;object
+	;fine coordinate
+	ox = 200
+	oy = 200
+	
+	;hashed coordinate
+	ohx = (ox/hx)
+	ohy = (oy/hy)
+	
+	;mod coordinate (fine coordinate = (hashed * hash) + mod
+	omx = ox Mod hx
+	omy = oy Mod hy
+	
+	;size
+	csx = 100
+	csy = 100
+	
+	;hashed centered coordinate due to size: (hashed * hash) - (player hashed * hash) - size/2[radius]
+	cx = hx*ohx - (rx*hx) -(csx/2)
+	cy = hy*ohy - (ry*hy) -(csy/2)
+	
+	;center coordinate: hashed coordinate + radius
+	tx = (cx +(csx/2))
+	ty = (cy +(csy/2))
+	
+	;display
+	Plot tx,ty
+	Text tx,ty, tx+"_"+ty
+	Oval cx,cy,csx,csy,0
+	
+	;visualization
+	Text -10,-100, tx+"_"+ty
+	Text -10,-120, omx;rx+"x"+ry
+
+
+	VWait:Flip False
+
+; Flip = vertical sync for the Gpu
+; VWait = vertical sync for the Cpu
+; Hence true silky smooth updates are best achieved using "VWait : Flip False". 
+
+Wend

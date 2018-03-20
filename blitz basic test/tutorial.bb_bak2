@@ -1,0 +1,10 @@
+Graphics 160,144, 0, 2
+
+Print "plo"
+
+While KeyHit(1)
+	Print GetKey()
+Wend
+
+WaitKey()
+

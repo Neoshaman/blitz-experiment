@@ -1,0 +1,54 @@
+Graphics 800,600,0,2
+Origin 400,300
+SetBuffer BackBuffer ()
+
+n = 2^32
+
+For i=-10 To 10
+	;SeedRnd (i)
+	;Rand (1)
+	;n = randomize(n*i)
+	Print random2(i);n+i;randomize(1);n-(9 Xor n);RndSeed()
+	;random1(i,0)
+Next
+WaitKey()
+
+Function randomize(seed)
+	seed = (seed * 214013) Mod 2147483648
+	Return seed Shr 16
+End Function
+
+
+Function random1(x,y)
+	SeedRnd (seed + (x*10000) + (z*100) )
+	a = Rnd(40)
+	Return a 
+End Function
+
+
+Function random2(c)
+	hash = 5381
+	Return hash = ((hash Shl 5) + hash) + c
+End Function
+
+	SeedRnd (x + (y*width) + (z*width*width) )
+	
+	
+	
+Function _randomize(seed)
+	seed = (seed * 214013) Mod 2147483648
+	Return seed Shr 16
+End Function
+
+
+Function _random1#(x,y)
+	SeedRnd (seed + (x*10000) + (z*100) )
+	a# = Rnd(40)
+	Return a 
+End Function
+
+
+Function _random2#()
+	hash = 5381
+	Return hash = ((hash Shl 5) + hash) +c
+End Function

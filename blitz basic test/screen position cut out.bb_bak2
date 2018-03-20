@@ -1,0 +1,203 @@
+Graphics 512,512,16,2
+SetBuffer FrontBuffer()
+
+x=0
+y=0
+
+While Not KeyHit (1)
+
+	;HidePointer 
+	
+	mx = MouseX()
+	my = MouseY()
+	
+	Cls
+	;Line x,y, MouseX(),MouseY()
+	Locate MouseX()-4, MouseY()-8
+	;Print "o"
+	
+	w = GraphicsWidth();/2
+	h = GraphicsHeight();/2
+	
+	;Print mx/w + " : " + my/h
+	
+	;Rect (mx/w)*w, (my/h)*h, w, h
+	
+	;regionCut( w, h, mx, my,2,9)
+	
+	Color 255,255,000
+	;regiondraw(w,h,mx, my, 3)
+	Color 255,255,255
+	regionpaint(w,h, mx,my, 64)
+	Flip
+
+Wend
+
+End
+;WaitKey()
+
+
+
+
+Function regionCut(width, height, posx, posy, division, depth=1)
+	
+	If width < division Then Return
+	If height < division Then Return
+	If division < division Then Return
+
+;Print depth
+	
+	width = width/division
+	height = height/division
+	
+	ax = ( posx/width ) * width
+	ay = ( posy/height ) * height
+	
+	Rect ax, ay, width, height, False
+	
+	If Not depth = 0 Then regionCut (width, height, posx, posy, division, depth-1)
+	
+End Function
+
+
+
+
+
+Function regiondraw(width, height, posx, posy, division, x=00, y=00, depth=4, divide =1)
+	
+	
+	If width    < division Then Return
+	If height   < division Then Return
+	If division < division Then Return
+
+	
+	width  = width  / division
+	height = height / division
+	
+;posx = psx Mod width
+;posy = posy Mod height
+
+	ax = ( (posx-x) / width ) *width
+	ay = ( (posy-y) / height) *height
+	
+	
+	Rect ax+x, ay+y, width, height, False
+	;If Not depth = 0 Then regionLod (width, height, posx, posy, division, depth-1)
+	;If Not depth = 0 Then regiondraw(width, height, posx,posy, division,i,j, depth-1, divide+1)
+	
+	If Not depth = 0 Then regiondraw(width, height, posx,posy, division, ax+x,ay+y, depth-1, divide+1)
+
+	
+;----------------------------------------------------------------------------------------------
+	
+	Color ColorRed(), ColorGreen()/divide, ColorBlue()/divide
+			;Locate MouseX()-4*-divide, MouseY()-12*-divide
+			;Print ax+ " / " + ay +"  :"+divide+" "+(posx-x)+" "+(posy-y)
+			;Print posx +" "+posy 
+	
+;Stop
+
+		
+	For i = 0 To division-1
+		For j = 0 To division-1
+
+			If ax/width = i And ay/height = j Then 
+			;Print ax +" " +ay
+			
+;Stop
+			
+			;find the square: ij -> offset + size
+			; divide the square: offset + suboffset (i +size/2)
+			
+				;If Not depth = 0 Then regiondraw(width, height, posx,posy, division,i,j, depth-1, divide+1)
+				;If Not depth = 0 Then regionLod (width, height, posx, posy, division, depth-1)
+		
+			Else
+				Oval x+i*width, y+j*height ,width,height, False
+			EndIf
+
+		Next
+	Next
+	
+	
+	
+
+End Function
+
+
+
+
+Function regionLod(width, height, posx, posy, division, depth=1)
+	
+	If width < division Then Return
+	If height < division Then Return
+	If division < division Then Return
+
+;Print depth
+	
+	width = width/division
+	height = height/division
+	
+	ax = ( posx/width ) * width
+	ay = ( posy/height ) * height
+	
+	Oval ax, ay, width, height, False
+	
+	If Not depth = 0 Then regionLod (width, height, posx, posy, division, depth-1)
+
+End Function 
+
+
+Function regionPaint(width, height, posx, posy, division, x=0, y=0, depth=1)
+
+division = 16
+
+posx = (posx/division)*division
+posy = (posy/division)*division
+
+	For i = x To x+width Step 16;division
+		For j = y To y+height Step 16;division
+			
+			c1# = Abs (posx - i)
+			c2# = Abs (posy - j)
+			t$ = c1 + "/" + c2
+			
+			;c0# = Sqr(width^2)
+			
+			
+			;c3# = Sqr(c1^2 + c2^2)/1		;euclidian distance		(circle)
+			c3# = max(c1,c2)				;chessboard distance	(square)
+			;c3# = Abs((c1 + c2))			;manhattan 				(diamond)
+			
+			
+			;c3 = Sqr(c3);/22.4
+			c3 = c3/512
+			;c3 = 2^c3
+			c3 = Sqr(c3)
+			c3 = c3*8/2^c3
+			c3 = c3*48
+			c3 = c3/32 +2
+			;Print c3
+			Color c3, c3, c3
+			Rect i,j, division, division
+			Color 255-c3, 255-c3, 255-c3
+			Text i,j, Int(c3)
+
+			
+			Color 000,255,255
+			;Text posx, posy, c3
+			;Print Int(c3)
+
+		Next
+	Next
+	;Print "/-----------------------------------------------------------"
+End Function 
+
+
+Function max(a,b)
+	If a > b Then
+		Return a
+	Else
+		Return b
+	End If
+End Function

@@ -1,0 +1,158 @@
+Graphics 800,600,0,2
+Origin 400,300
+SetBuffer BackBuffer ()
+Stop
+
+Const gridSize = 20
+;for each cell on screen
+For i = 0 To GraphicsWidth()/gridSize ; Step gridsize
+	For j = 0 To GraphicsHeight()/gridSize ; Step gridsize
+			
+		
+		gx = i*gridsize
+		gy = j*gridsize
+		
+		Color 1*i,1*j,0
+		Rect gx,gy ,gridsize, gridsize, 0
+		
+		;width = (i*10000) + (j*100):SeedRnd (1 + (i*width) + (j*width*width) );turned into hashseed function
+
+		
+		;for each cell (this loop)
+		; make a list of all points of the cells and neighbor (seeding their position)
+		; for each point in the cell
+		;	find the min neighbor in each direction
+		
+		;cell seed, i is LR, j is UD
+		Cell_C 	 = Hashseed (i,j)
+		
+		Cell_UL	 = Hashseed (i+1,j-1)
+		Cell_U	 = Hashseed (i+1,j)
+		Cell_UR	 = Hashseed (i+1,j+1)
+
+		Cell_L	 = Hashseed (i,j-1)
+		Cell_R	 = Hashseed (i,j+1)
+
+		Cell_DL	 = Hashseed (i-1,j-1)
+		Cell_D	 = Hashseed (i-1,j)
+		Cell_DR	 = Hashseed (i-1,j+1)
+		;drop hash that are out of bound
+		;fid a pattern ti not regenerate neighbor
+		
+		
+		
+		SeedRnd Cell_C
+		iteration = Rand (0,3)
+
+		;single cell random point
+		For k = 0 To iteration 
+		
+			Color 0,0,255
+			star.points = New points
+			star\x = Rand(gx, gx + gridsize)
+			star\y = Rand(gy, gy + gridsize)
+			
+			Rect  star\x,star\y,2,2
+			
+			Select k
+				Case 0 : o.points = star.points :;Text gx,gy,k
+				Case 1 : a.points = star.points :;Text gx,gy,k
+				Case 2 : b.points = star.points :;Text gx,gy,k
+				Case 3 : c.points = star.points :;Text gx,gy,k
+			End Select 
+			
+			
+			; for each point in the cell
+			;	find the min neighbor in ul direction
+			;	find the min neighbor in u direction
+			;	find the min neighbor in ur direction
+			;	find the min neighbor in l direction
+			;	find the min neighbor in r direction
+			;	find the min neighbor in dl direction
+			;	find the min neighbor in d direction
+			;	find the min neighbor in dr direction
+			;	find the min neighbor in ABS direction
+
+	
+			
+			
+		Next;end iteration
+
+
+
+		Select 0;k-1
+			Case 0
+				;Text 0,0,"u"
+			Case 1
+				Color 255,00,00
+				Line o\x, o\y, a\x, a\y		
+			Case 2
+				Color 00,255,00
+				Line o\x, o\y, a\x, a\y
+				Line a\x, a\y, b\x, b\y
+				Line b\x, b\y, o\x, o\y
+			Case 3
+				Color 00,00,255
+				Line o\x, o\y, a\x, a\y
+				Line a\x, a\y, b\x, b\y
+				Line b\x, b\y, c\x, c\y 
+				Line c\x, c\y, o\x, o\y 
+		End Select
+		
+
+	Next;j loop
+Next ;i loop
+
+starmapImage = CreateImage( GraphicsWidth(), GraphicsHeight() ); could declare early and set imagebuffer before reseting the double buffer
+GrabImage starmapImage, 0,0
+
+e.points = Last points
+
+;For sun.points = Each points
+;	s.points = After sun
+;	Line sun\x, sun\y, s\x, s\y
+;	If s = e Then Exit 
+;Next 
+
+
+While Not KeyDown(1)
+	
+	Cls
+	DrawImage starmapImage, 0,0
+	mx = (MouseX()/gridsize)*gridsize
+	my = (MouseY()/gridsize)*gridsize
+
+	;refresh
+	
+	Color 255,255,255
+	Rect mx, my, gridsize, gridsize,0
+	
+	;find trade routes
+	
+	VWait:Flip False
+		
+Wend
+FreeImage starmapImage
+ClearWorld 
+
+
+
+
+
+
+
+Type points
+	Field x
+	Field y
+	
+	Field maxX.points
+	Field minX.points
+	Field maxY.points
+	Field minY.points
+End Type
+
+Function Hashseed(i,j)
+			width = (i*10000) + (j*100)
+			Return (1 + (i*width) + (j*width*width) )
+End Function
+
